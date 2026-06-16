@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { getEmbedding } from './embeddings';
 import type { SearchFilters, MenuItemResult, SearchMode } from './types';
 
 const DEFAULT_LIMIT = 20;
@@ -45,24 +46,18 @@ async function runFuzzySearch(query: string, common: RpcCommonArgs): Promise<Men
 }
 
 async function runSemanticSearch(query: string, common: RpcCommonArgs): Promise<MenuItemResult[]> {
-  try {
-    const { getEmbedding } = await import('./embeddings');
-    const embedding = await getEmbedding(query);
+  const embedding = await getEmbedding(query);
 
-    const { data, error } = await supabase.rpc('search_menu_semantic', {
-      query_embedding: embedding,
-      match_threshold: SEMANTIC_MATCH_THRESHOLD,
-      ...common,
-    });
-    if (error) {
-      console.error('[search] Semantic search error:', error);
-      return [];
-    }
-    return (data ?? []).map((row: any) => ({ ...row, score: row.similarity, score_type: 'similarity' as const }));
-  } catch (err) {
-    console.error('[search] Semantic search unavailable:', err);
+  const { data, error } = await supabase.rpc('search_menu_semantic', {
+    query_embedding: embedding,
+    match_threshold: SEMANTIC_MATCH_THRESHOLD,
+    ...common,
+  });
+  if (error) {
+    console.error('[search] Semantic search error:', error);
     return [];
   }
+  return (data ?? []).map((row: any) => ({ ...row, score: row.similarity, score_type: 'similarity' as const }));
 }
 
 export async function searchMenu(

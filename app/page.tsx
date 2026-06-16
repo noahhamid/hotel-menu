@@ -1,7 +1,5 @@
 "use client";
 
-export const revalidate = 0;
-
 import { useEffect, useState, useCallback } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { MenuItemResult, Category, SearchMode } from "@/lib/ir/types";
